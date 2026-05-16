@@ -76,9 +76,10 @@ def get_audio_path(word: str) -> Path:
 
 async def _generate_audio_async(word: str, path: Path) -> None:
     """使用 edge-tts 异步生成单个单词的音频。"""
-    text_with_breaks = "，".join(word) + "，"
+    # 直接传入完整词语，让 TTS 模型根据词语上下文判断多音字。
+    # 若用逗号拆字会破坏语境，导致多音字（如"累""应"）读错。
     communicate = edge_tts.Communicate(
-        text_with_breaks,
+        word,
         voice=TTS_VOICE,
         rate=TTS_RATE,
     )
