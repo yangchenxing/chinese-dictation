@@ -323,13 +323,13 @@ html, body {
     height: 100%;
     overflow-y: auto;
     background: #16213e;
-    padding: 2vh 2vw;
+    padding: 1vh 1vw;
 }
 .grid-container {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
     grid-auto-rows: 1fr;
-    gap: 1.5vh 1.5vw;
+    gap: 1vh 1vw;
     width: 100%;
 }
 .grid-item {
@@ -337,12 +337,11 @@ html, body {
     align-items: center;
     justify-content: center;
     background: #0f3460;
-    border-radius: 1.5vh;
+    border-radius: 1vh;
     font-weight: bold;
     text-align: center;
     overflow: hidden;
-    aspect-ratio: 4 / 3;
-    padding: 1vw;
+    padding: 0.5vw;
 }
 </style>
 </head>
@@ -505,6 +504,20 @@ function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));
 }
 
+function playBeep() {
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.type = 'sine';
+    osc.frequency.value = 880;
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime + 0.15);
+}
+
 async function startDictation() {
     isPlaying = true;
     mainText.style.display = 'none';
@@ -521,10 +534,13 @@ async function startDictation() {
         await playAudio(word);
 
         // 等待时间
-        const waitSeconds = word.length * interval2 + interval3;
+        const waitSeconds = Math.max(word.length * interval2 + interval3, 3);
         countdownText.style.display = 'block';
         for (let s = waitSeconds; s > 0; s--) {
             countdownText.textContent = s + '秒';
+            if (s <= 3) {
+                playBeep();
+            }
             await sleep(1000);
         }
         countdownText.style.display = 'none';
@@ -548,7 +564,7 @@ function showWordGrid() {
         const div = document.createElement('div');
         div.className = 'grid-item';
         const len = Math.max(word.length, 1);
-        const fontSize = 'min(' + (24 / len) + 'vw, 11vh)';
+        const fontSize = 'min(' + (20 / len) + 'vw, 11vh)';
         div.style.fontSize = fontSize;
         div.textContent = word;
         gridContainer.appendChild(div);
